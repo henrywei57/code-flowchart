@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Code Flowchart</title>
+    <meta
+      name="description"
+      content="Turn JavaScript into a flowchart and a plain-English explanation using static analysis only. No AI involved."
+    />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="10" y="2" width="12" height="7" rx="3.5" class="bm-start" />
+          <path d="M16 9v3M16 24v2" class="bm-line" />
+          <path d="M16 12l7 6-7 6-7-6z" class="bm-decision" />
+          <rect x="10" y="26" width="12" height="5" rx="2" class="bm-end" />
+        </svg>
+        <div>
+          <h1>Code Flowchart</h1>
+          <p class="tagline">Flowcharts and plain-English explanations from static analysis. No AI involved.</p>
+        </div>
+      </div>
+      <a class="topbar-link" href="https://github.com/henrywei57/code-flowchart" target="_blank" rel="noopener">Source on GitHub</a>
+    </header>
+
+    <main class="layout">
+      <!-- ============================== INPUT ============================== -->
+      <section class="panel input-panel" aria-label="Input">
+        <div class="tabs" role="tablist" aria-label="Input mode">
+          <button class="tab" role="tab" id="tab-paste" aria-controls="panel-paste" aria-selected="true">
+            Paste code
+          </button>
+          <button class="tab" role="tab" id="tab-github" aria-controls="panel-github" aria-selected="false" tabindex="-1">
+            Load from GitHub
+          </button>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-paste" aria-labelledby="tab-paste">
+          <div class="field-head">
+            <label for="code-input">JavaScript source</label>
+            <div class="field-tools">
+              <select id="example-select" aria-label="Load an example">
+                <option value="">Examples…</option>
+              </select>
+              <button class="button ghost small" type="button" id="upload-btn">Upload .js</button>
+              <input type="file" id="file-upload" accept=".js,.mjs,.cjs,text/javascript" hidden />
+            </div>
+          </div>
+          <div class="drop-zone" id="drop-zone">
+            <textarea
+              id="code-input"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              wrap="off"
+              placeholder="Paste JavaScript here, or drop a .js file"
+            ></textarea>
+            <div class="drop-overlay" aria-hidden="true">Drop a .js file to load it</div>
+          </div>
+          <p class="hint">Drop a file on the editor, or press <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate.</p>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-github" aria-labelledby="tab-github" hidden>
+          <form id="repo-form" class="repo-form" novalidate>
+            <label for="repo-input">Public GitHub repository</label>
+            <div class="input-row">
+              <input
+                id="repo-input"
+                type="text"
+                inputmode="url"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="owner/repo or https://github.com/owner/repo"
+              />
+              <button type="submit" class="button" id="repo-load">Load files</button>
+            </div>
+            <p class="hint">Public repositories only. No sign-in or token needed.</p>
+          </form>
+
+          <div id="repo-status" class="status" role="status" aria-live="polite"></div>
+
+          <div id="file-picker" class="file-picker" hidden>
+            <div class="picker-head">
+              <span id="repo-name" class="repo-name"></span>
+              <span id="file-count" class="muted"></span>
+            </div>
+            <input id="file-filter" type="search" placeholder="Filter files…" aria-label="Filter files" autocomplete="off" />
+            <label class="check">
+              <input type="checkbox" id="hide-generated" checked />
+              Hide minified, bundled &amp; vendored files
+            </label>
+            <select id="file-list" size="12" aria-label="JavaScript files in this repository"></select>
+            <p id="file-meta" class="hint"></p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="generate-btn" class="button primary" type="button">Generate</button>
+          <span id="rate-limit" class="muted small"></span>
+        </div>
+      </section>
+
+      <!-- ============================== OUTPUT ============================= -->
+      <section class="output" aria-label="Results">
+        <div id="message" class="message" role="alert" hidden></div>
+
+        <article class="card" id="flow-card">
+          <header class="card-head">
+            <div class="card-title">
+              <h2>Flowchart</h2>
+              <span id="analyzed-label" class="muted small"></span>
+            </div>
+            <div class="toolbar">
+              <select id="unit-select" aria-label="Choose which function to show"></select>
+              <div class="zoom" role="group" aria-label="Zoom">
+                <button class="icon-btn" id="zoom-out" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+                <button class="icon-btn wide" id="zoom-fit" type="button" title="Fit to width">Fit</button>
+                <button class="icon-btn" id="zoom-in" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+              </div>
+              <button class="button ghost small" id="copy-mermaid" type="button" title="Copy the Mermaid definition of the charts shown">
+                Copy Mermaid
+              </button>
+            </div>
+          </header>
+          <ul class="legend" id="legend" aria-label="Legend"></ul>
+          <div id="charts" class="charts">
+            <p class="empty">Paste some JavaScript and press <strong>Generate</strong>.</p>
+          </div>
+        </article>
+
+        <article class="card" id="explain-card">
+          <header class="card-head">
+            <div class="card-title">
+              <h2>Explanation</h2>
+              <span id="complexity-tag" class="tag" hidden></span>
+            </div>
+            <div class="toolbar">
+              <button class="button ghost small" id="copy-markdown" type="button">Copy as Markdown</button>
+            </div>
+          </header>
+          <div id="explanation" class="explanation">
+            <p class="empty">The explanation appears here.</p>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">
+      Parsed in your browser with <a href="https://github.com/acornjs/acorn" target="_blank" rel="noopener">Acorn</a>,
+      drawn with <a href="https://mermaid.js.org" target="_blank" rel="noopener">Mermaid</a>. Pasted code never leaves your browser.
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

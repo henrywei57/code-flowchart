@@ -1,0 +1,15 @@
+{
+  "name": "code-flowchart",
+  "version": "1.0.0",
+  "description": "Turn JavaScript into a flowchart and a plain-English explanation using static analysis only.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python3 scripts/serve.py 8080",
+    "test": "node test/smoke.mjs",
+    "vendor": "cp node_modules/acorn/dist/acorn.mjs vendor/acorn.mjs && cp node_modules/acorn/LICENSE vendor/acorn.LICENSE"
+  },
+  "devDependencies": {
+    "acorn": "8.19.0"
+  }
+}
