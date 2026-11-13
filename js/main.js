@@ -311,6 +311,8 @@ function renderCharts() {
     return;
   }
 
+  // The first few charts draw right away; the rest wait until scrolled near.
+  const EAGER = 3;
   chartObserver = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
@@ -362,7 +364,8 @@ function renderCharts() {
       card.append(el('p', 'chart-note', 'This function is very long, so the chart stops partway. The explanation below covers all of it.'));
     }
     els.charts.append(card);
-    chartObserver.observe(canvas);
+    if (els.charts.children.length <= EAGER) drawChart(canvas, chart, token);
+    else chartObserver.observe(canvas);
   }
   updateZoomButtons();
 }
